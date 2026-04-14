@@ -1,5 +1,7 @@
 # sandbox-pilot
 
+[![CI](https://github.com/chrisshaiman/sandbox-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/chrisshaiman/sandbox-pilot/actions/workflows/ci.yml)
+
 AI-assisted malware detonation agent for QEMU sandboxes.
 
 Many malware samples require user interaction to fully execute: clicking
