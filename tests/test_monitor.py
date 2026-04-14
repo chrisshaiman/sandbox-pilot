@@ -246,3 +246,25 @@ def test_qkey_open_brace() -> None:
 
 def test_qkey_pipe() -> None:
     assert QKEY["|"] == "shift-backslash"
+
+
+# ---------------------------------------------------------------------------
+# Security: newline injection prevention
+# ---------------------------------------------------------------------------
+
+
+def test_send_command_strips_newlines(mon: QEMUMonitor, fake_server: FakeMonitor) -> None:
+    """Embedded newlines in commands must be stripped to prevent command injection."""
+    mon.send_command("sendkey a\nquit")
+    time.sleep(0.3)
+    # Newline stripped — "quit" merged into single command, not executed separately
+    assert "sendkey aquit" in fake_server.commands
+    assert len(fake_server.commands) == 1  # only ONE command sent, not two
+
+
+def test_send_command_strips_carriage_return(mon: QEMUMonitor, fake_server: FakeMonitor) -> None:
+    """Carriage returns must also be stripped."""
+    mon.send_command("sendkey b\r\nquit")
+    time.sleep(0.3)
+    assert "sendkey bquit" in fake_server.commands
+    assert len(fake_server.commands) == 1

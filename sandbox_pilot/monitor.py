@@ -7,6 +7,7 @@ command). Intended for sandbox automation: detonating malware samples and
 capturing execution in a controlled QEMU VM.
 """
 
+import logging
 import socket
 import time
 
@@ -145,7 +146,8 @@ class QEMUMonitor:
         needed by callers).
         """
         buf = b""
-        assert self._sock is not None
+        if self._sock is None:
+            raise RuntimeError("Monitor socket is closed")
         self._sock.settimeout(5.0)
         try:
             while True:
@@ -172,9 +174,20 @@ class QEMUMonitor:
 
         A newline is appended automatically.  Sleeps KEY_DELAY seconds after
         sending to give QEMU time to process before the next command.
+
+        Security: newline and carriage-return characters are stripped from
+        *cmd* to prevent command injection.  A single monitor command must
+        be exactly one line — embedded newlines could inject additional
+        monitor commands (e.g. ``quit``, ``migrate``).
         """
-        assert self._sock is not None, "Monitor socket is closed"
-        self._sock.sendall((cmd + "\n").encode("utf-8"))
+        if self._sock is None:
+            raise RuntimeError("Monitor socket is closed")
+        sanitized = cmd.replace("\n", "").replace("\r", "")
+        if sanitized != cmd:
+            logging.getLogger(__name__).warning(
+                "Stripped newline/CR from monitor command: %r → %r", cmd, sanitized
+            )
+        self._sock.sendall((sanitized + "\n").encode("utf-8"))
         time.sleep(KEY_DELAY)
         return self._read_until_prompt()
 

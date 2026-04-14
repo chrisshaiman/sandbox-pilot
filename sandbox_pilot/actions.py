@@ -41,10 +41,18 @@ MAX_TYPE_LENGTH = 100
 # Any match sets suspicious=True.
 _SUSPICIOUS_TEXT_PATTERNS: list[re.Pattern] = [
     re.compile(r"[|;&]",              re.IGNORECASE),
+    re.compile(r"[>]{1,2}\s*/",       re.IGNORECASE),  # output redirection
     re.compile(r"powershell\s+-",     re.IGNORECASE),
     re.compile(r"cmd\s*/c",           re.IGNORECASE),
     re.compile(r"wget\s+",            re.IGNORECASE),
     re.compile(r"curl\s+",            re.IGNORECASE),
+    re.compile(r"certutil\s+",        re.IGNORECASE),  # Windows download/decode
+    re.compile(r"bitsadmin\s+",       re.IGNORECASE),  # Windows download
+    re.compile(r"net\s+(?:user|localgroup)\s+", re.IGNORECASE),  # account manipulation
+    re.compile(r"reg\s+(?:add|delete)\s+",      re.IGNORECASE),  # registry manipulation
+    re.compile(r"schtasks\s+",        re.IGNORECASE),  # persistence
+    re.compile(r"wscript\s+",         re.IGNORECASE),
+    re.compile(r"cscript\s+",         re.IGNORECASE),
 ]
 
 # Patterns matched against Claude's reasoning string.
@@ -52,6 +60,9 @@ _SUSPICIOUS_TEXT_PATTERNS: list[re.Pattern] = [
 _SUSPICIOUS_REASONING_PATTERNS: list[re.Pattern] = [
     re.compile(r"instructions?\s+on\s+screen",                        re.IGNORECASE),
     re.compile(r"text\s+(?:on\s+screen\s+)?(?:told|asked|says|instructs)", re.IGNORECASE),
+    re.compile(r"(?:the\s+)?screen\s+says\s+to",                     re.IGNORECASE),
+    re.compile(r"following\s+(?:the\s+)?on-?screen\s+instructions?",  re.IGNORECASE),
+    re.compile(r"as\s+directed\s+by\s+(?:the\s+)?text",              re.IGNORECASE),
     re.compile(r"ignore\s+previous",                                  re.IGNORECASE),
 ]
 

@@ -84,7 +84,9 @@ class VisionAnalyzer:
         """
         system = SYSTEM_PROMPT.format(resolution=resolution)
         if hint:
-            system += f"\n\nSAMPLE CONTEXT: {hint}"
+            # Wrap hint in XML-style delimiters to prevent prompt injection
+            # via operator-supplied hint text.
+            system += f"\n\n<sample-context>\n{hint}\n</sample-context>"
 
         # Base64-encode the screenshot for the vision API.
         image_b64 = base64.standard_b64encode(screenshot_png).decode("ascii")
@@ -121,7 +123,9 @@ class VisionAnalyzer:
             return self._parse_response(text)
         except anthropic.APIError as exc:
             logger.warning("Anthropic API error: %s", exc)
-            return {"action": "WAIT", "reasoning": f"API error: {exc}"}
+            # Only expose the exception type in the reasoning field — the full
+            # repr may contain request headers or partial API key context.
+            return {"action": "WAIT", "reasoning": f"API error: {type(exc).__name__}"}
 
     def _parse_response(self, text: str) -> dict:
         """Strip markdown code fences if present, then parse JSON.
