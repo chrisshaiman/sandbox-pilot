@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sandbox-pilot"
+version = "0.1.0"
+description = "AI-assisted malware detonation agent for QEMU sandboxes"
+license = {text = "Apache-2.0"}
+authors = [{name = "Christopher Shaiman"}]
+requires-python = ">=3.10"
+readme = "README.md"
+
+dependencies = [
+    "anthropic>=0.40.0",
+    "Pillow>=10.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[project.scripts]
+sandbox-pilot = "sandbox_pilot.cli:main"
