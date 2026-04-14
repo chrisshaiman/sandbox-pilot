@@ -7,11 +7,18 @@ sends a QEMU-style banner on connect and records every command line received.
 """
 
 import socket
+import sys
 import threading
 import time
 from pathlib import Path
 
 import pytest
+
+# QEMUMonitor uses Unix sockets — skip the entire module on platforms without them.
+pytestmark = pytest.mark.skipif(
+    not hasattr(socket, "AF_UNIX"),
+    reason="Unix sockets not available on this platform",
+)
 
 from sandbox_pilot.monitor import QKEY, QEMUMonitor
 

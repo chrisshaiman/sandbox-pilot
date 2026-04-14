@@ -105,7 +105,6 @@ class QEMUMonitor:
     def __init__(self, socket_path: str, connect_timeout: float = 10.0) -> None:
         self._path = socket_path
         self._sock: socket.socket | None = None
-        self._file = None  # makefile wrapper for line-oriented reads
         self._connect(connect_timeout)
 
     # ------------------------------------------------------------------
@@ -122,8 +121,6 @@ class QEMUMonitor:
                 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 sock.connect(self._path)
                 self._sock = sock
-                # Wrap in a buffered file object for easy readline()
-                self._file = sock.makefile("rb")
                 # Read and discard the QEMU banner (one or more lines ending
                 # with the prompt "(qemu) ").  We just drain until we see the
                 # prompt string so subsequent reads are aligned.
@@ -245,14 +242,14 @@ class QEMUMonitor:
         """Save a screenshot of the VM display to *path* on the host."""
         self.send_command(f"screendump {path}")
 
+    def __enter__(self) -> "QEMUMonitor":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
     def close(self) -> None:
         """Close the monitor connection."""
-        if self._file is not None:
-            try:
-                self._file.close()
-            except OSError:
-                pass
-            self._file = None
         if self._sock is not None:
             try:
                 self._sock.close()

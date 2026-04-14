@@ -66,7 +66,7 @@ class VisionAnalyzer:
     def analyze(
         self,
         screenshot_png: bytes,
-        history: list,
+        history: list[dict],
         resolution: str = "1920x1080",
         hint: str | None = None,
     ) -> dict:

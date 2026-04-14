@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 # Maximum number of history messages kept (10 exchanges = 20 messages).
 _MAX_HISTORY = 20
 
+# Seconds to wait after screendump for QEMU to finish writing the PPM file.
+_SCREENDUMP_SETTLE = 0.3
+
 # ---------------------------------------------------------------------------
 # ActionRecord
 # ---------------------------------------------------------------------------
@@ -84,7 +87,7 @@ def _take_screenshot(monitor: QEMUMonitor, tmp_dir: Path) -> bytes:
     ppm_path = tmp_dir / "screen.ppm"
     monitor.screendump(str(ppm_path))
     # Give QEMU a moment to finish writing the file.
-    time.sleep(0.3)
+    time.sleep(_SCREENDUMP_SETTLE)
 
     img = Image.open(ppm_path)
     buf = io.BytesIO()
@@ -333,26 +336,24 @@ def main() -> None:
         print(f"  hint       : {args.hint}")
     print()
 
-    monitor = QEMUMonitor(args.socket)
-    try:
-        vision = VisionAnalyzer(model=args.model)
-        heuristics = ScreenChangeDetector()
+    with QEMUMonitor(args.socket) as monitor:
+        try:
+            vision = VisionAnalyzer(model=args.model)
+            heuristics = ScreenChangeDetector()
 
-        records = run_loop(
-            monitor=monitor,
-            vision=vision,
-            heuristics=heuristics,
-            max_iterations=args.max_iterations,
-            interval=args.interval,
-            resolution=args.resolution,
-            hint=args.hint,
-            timeout=args.timeout,
-        )
+            records = run_loop(
+                monitor=monitor,
+                vision=vision,
+                heuristics=heuristics,
+                max_iterations=args.max_iterations,
+                interval=args.interval,
+                resolution=args.resolution,
+                hint=args.hint,
+                timeout=args.timeout,
+            )
 
-        _print_summary(records)
+            _print_summary(records)
 
-    except KeyboardInterrupt:
-        print()
-        print("Interrupted by user.")
-    finally:
-        monitor.close()
+        except KeyboardInterrupt:
+            print()
+            print("Interrupted by user.")

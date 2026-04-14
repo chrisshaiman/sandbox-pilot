@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
+# Valid action names that Claude may return.
+_VALID_ACTIONS = {"CLICK", "TYPE", "KEY", "WAIT", "DONE"}
+
 # Maximum number of characters allowed in a TYPE action's text field.
 # Exceeding this is treated as a likely injection or model hallucination.
 MAX_TYPE_LENGTH = 100
@@ -149,8 +152,6 @@ def parse_action(raw: dict) -> dict:
         Normalised action dict with at least ``{"action": "<NAME>"}``.
         May include ``suspicious=True`` and a ``reasoning`` string.
     """
-    _VALID_ACTIONS = {"CLICK", "TYPE", "KEY", "WAIT", "DONE"}
-
     action_name = raw.get("action")
     if not isinstance(action_name, str) or action_name.upper() not in _VALID_ACTIONS:
         return _safe_wait(reasoning=f"unknown or missing action: {action_name!r}")
